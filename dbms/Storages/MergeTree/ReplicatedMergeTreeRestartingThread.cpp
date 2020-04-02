@@ -206,7 +206,7 @@ bool ReplicatedMergeTreeRestartingThread::tryStartup()
     }
     catch (...)
     {
-        storage.replica_is_active_node = nullptr;
+        std::atomic_store(&storage.replica_is_active_node, zkutil::EphemeralNodeHolderPtr{});
 
         try
         {
@@ -324,7 +324,7 @@ void ReplicatedMergeTreeRestartingThread::activateReplica()
 
     /// `current_zookeeper` lives for the lifetime of `replica_is_active_node`,
     ///  since before changing `current_zookeeper`, `replica_is_active_node` object is destroyed in `partialShutdown` method.
-    storage.replica_is_active_node = zkutil::EphemeralNodeHolder::existing(is_active_path, *storage.current_zookeeper);
+    std::atomic_store(&storage.replica_is_active_node, zkutil::EphemeralNodeHolder::existing(is_active_path, *storage.current_zookeeper));
 }
 
 
@@ -334,7 +334,7 @@ void ReplicatedMergeTreeRestartingThread::partialShutdown()
 
     storage.partial_shutdown_called = true;
     storage.partial_shutdown_event.set();
-    storage.replica_is_active_node = nullptr;
+    std::atomic_store(&storage.replica_is_active_node, zkutil::EphemeralNodeHolderPtr{});
 
     LOG_TRACE(log, "Waiting for threads to finish");
 
