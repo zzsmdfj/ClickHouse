@@ -3608,7 +3608,7 @@ void StorageReplicatedMergeTree::drop(TableStructureWriteLockHolder &)
             throw Exception("Table was not dropped because ZooKeeper session has expired.", ErrorCodes::TABLE_WAS_NOT_DROPPED);
 
         LOG_INFO(log, "Removing replica " << replica_path);
-        replica_is_active_node = nullptr;
+        std::atomic_store(&replica_is_active_node, zkutil::EphemeralNodeHolderPtr{});
         zookeeper->tryRemoveRecursive(replica_path);
 
         /// Check that `zookeeper_path` exists: it could have been deleted by another replica after execution of previous line.
